@@ -1,0 +1,45 @@
+---
+# Source: prometheus/templates/pushgateway-deployment.yaml
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  labels:
+    component: "pushgateway"
+    app: prometheus
+    release: infra
+    chart: prometheus-8.4.6
+    heritage: Tiller
+  name: infra-prometheus-pushgateway
+spec:
+  selector:
+    matchLabels:
+      component: "pushgateway"
+      app: prometheus
+      release: infra
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        component: "pushgateway"
+        app: prometheus
+        release: infra
+        chart: prometheus-8.4.6
+        heritage: Tiller
+    spec:
+      serviceAccountName: infra-prometheus-pushgateway
+      containers:
+        - name: prometheus-pushgateway
+          image: "prom/pushgateway:v0.6.0"
+          imagePullPolicy: "IfNotPresent"
+          args:
+          ports:
+            - containerPort: 9091
+          readinessProbe:
+            httpGet:
+              path: /#/status
+              port: 9091
+            initialDelaySeconds: 10
+            timeoutSeconds: 10
+          resources:
+            {}
+            

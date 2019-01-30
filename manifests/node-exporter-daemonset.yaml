@@ -1,0 +1,61 @@
+---
+# Source: prometheus/templates/node-exporter-daemonset.yaml
+apiVersion: extensions/v1beta1
+kind: DaemonSet
+metadata:
+  labels:
+    component: "node-exporter"
+    app: prometheus
+    release: infra
+    chart: prometheus-8.4.6
+    heritage: Tiller
+  name: infra-prometheus-node-exporter
+spec:
+  selector:
+    matchLabels:
+      component: "node-exporter"
+      app: prometheus
+      release: infra
+  updateStrategy:
+    type: RollingUpdate
+    
+  template:
+    metadata:
+      labels:
+        component: "node-exporter"
+        app: prometheus
+        release: infra
+        chart: prometheus-8.4.6
+        heritage: Tiller
+    spec:
+      serviceAccountName: infra-prometheus-node-exporter
+      containers:
+        - name: prometheus-node-exporter
+          image: "prom/node-exporter:v0.17.0"
+          imagePullPolicy: "IfNotPresent"
+          args:
+            - --path.procfs=/host/proc
+            - --path.sysfs=/host/sys
+          ports:
+            - name: metrics
+              containerPort: 9100
+              hostPort: 9100
+          resources:
+            {}
+            
+          volumeMounts:
+            - name: proc
+              mountPath: /host/proc
+              readOnly:  true
+            - name: sys
+              mountPath: /host/sys
+              readOnly: true
+      hostNetwork: true
+      hostPID: true
+      volumes:
+        - name: proc
+          hostPath:
+            path: /proc
+        - name: sys
+          hostPath:
+            path: /sys

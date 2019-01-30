@@ -1,0 +1,83 @@
+---
+# Source: prometheus/templates/alertmanager-deployment.yaml
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  labels:
+    component: "alertmanager"
+    app: prometheus
+    release: infra
+    chart: prometheus-8.4.6
+    heritage: Tiller
+  name: infra-prometheus-alertmanager
+spec:
+  selector:
+    matchLabels:
+      component: "alertmanager"
+      app: prometheus
+      release: infra
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        component: "alertmanager"
+        app: prometheus
+        release: infra
+        chart: prometheus-8.4.6
+        heritage: Tiller
+    spec:
+      serviceAccountName: infra-prometheus-alertmanager
+      containers:
+        - name: prometheus-alertmanager
+          image: "prom/alertmanager:v0.16.0"
+          imagePullPolicy: "IfNotPresent"
+          env:
+            - name: POD_IP
+              valueFrom:
+                fieldRef:
+                  apiVersion: v1
+                  fieldPath: status.podIP
+          args:
+            - --config.file=/etc/config/alertmanager.yml
+            - --storage.path=/data
+            - --cluster.advertise-address=$(POD_IP):6783
+            - --web.external-url=/
+
+          ports:
+            - containerPort: 9093
+          readinessProbe:
+            httpGet:
+              path: /#/status
+              port: 9093
+            initialDelaySeconds: 30
+            timeoutSeconds: 30
+          resources:
+            {}
+            
+          volumeMounts:
+            - name: config-volume
+              mountPath: /etc/config
+            - name: storage-volume
+              mountPath: "/data"
+              subPath: ""
+
+        - name: prometheus-alertmanager-configmap-reload
+          image: "jimmidyson/configmap-reload:v0.2.2"
+          imagePullPolicy: "IfNotPresent"
+          args:
+            - --volume-dir=/etc/config
+            - --webhook-url=http://localhost:9093/-/reload
+          resources:
+            {}
+            
+          volumeMounts:
+            - name: config-volume
+              mountPath: /etc/config
+              readOnly: true
+      volumes:
+        - name: config-volume
+          configMap:
+            name: infra-prometheus-alertmanager
+        - name: storage-volume
+          persistentVolumeClaim:
+            claimName: infra-prometheus-alertmanager

@@ -1,0 +1,45 @@
+---
+# Source: prometheus/templates/server-service.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    component: "server"
+    app: prometheus
+    release: infra
+    chart: prometheus-8.4.6
+    heritage: Tiller
+  name: infra-prometheus-server
+spec:
+  ports:
+    - name: http
+      port: 80
+      protocol: TCP
+      targetPort: 9090
+  selector:
+    component: "server"
+    app: prometheus
+    release: infra
+  type: "ClusterIP"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    component: "server"
+    app: prometheus
+    release: infra
+    chart: prometheus-8.4.6
+    heritage: Tiller
+  name: infra-prometheus-server-public
+spec:
+  ports:
+    - name: http
+      port: 80
+      protocol: TCP
+      targetPort: 9090
+  selector:
+    component: "server"
+    app: prometheus
+    release: infra
+  type: "LoadBalancer"

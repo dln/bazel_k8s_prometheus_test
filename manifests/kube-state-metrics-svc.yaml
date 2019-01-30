@@ -1,0 +1,27 @@
+---
+# Source: prometheus/templates/kube-state-metrics-svc.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  annotations:
+    prometheus.io/scrape: "true"
+    
+  labels:
+    component: "kube-state-metrics"
+    app: prometheus
+    release: infra
+    chart: prometheus-8.4.6
+    heritage: Tiller
+  name: infra-prometheus-kube-state-metrics
+spec:
+  clusterIP: None
+  ports:
+    - name: http
+      port: 80
+      protocol: TCP
+      targetPort: 8080
+  selector:
+    component: "kube-state-metrics"
+    app: prometheus
+    release: infra
+  type: "ClusterIP"
